@@ -77,8 +77,8 @@ export class Time {
     t: 0
   }
 
-  #time: number = 0
-  #mode: TimeMode = 'clock'
+  readonly #time: number = 0
+  readonly #mode: TimeMode = 'clock'
 
   constructor(time: TimeInput | BrandedTime, options: TimeConstructorOptions = {}) {
 
@@ -98,7 +98,7 @@ export class Time {
         throw new TypeError('Time must be a string or branded Time object')
       }
 
-      this.#parseTimeString(time)
+      this.#time = this.normalize(this.#parseTimeString(time))
     }
   }
 
@@ -121,10 +121,6 @@ export class Time {
   get mode(): TimeMode {
     return this.#mode
   }
-
-  /* =========================
-   * Conversion Methods
-   * ========================= */
 
   toMilliseconds(): number {
     return this.#time
@@ -248,10 +244,6 @@ export class Time {
     return this.#time > startTime.#time && this.#time < endTime.#time
   }
 
-  /* =========================
-   * Utility Methods
-   * ========================= */
-
   normalize(ms: number): number {
     if (this.#mode === 'clock') {
       return ((ms % DAYS_MS) + DAYS_MS) % DAYS_MS
@@ -295,10 +287,6 @@ export class Time {
     return this.toString()
   }
 
-  /* =========================
-   * Private Methods
-   * ========================= */
-
   #isBrandedTime(value: unknown): value is BrandedTime {
     return !!(
       value &&
@@ -315,7 +303,7 @@ export class Time {
     return time
   }
 
-  #parseTimeString(time: string): void {
+  #parseTimeString(time: string): number {
     const parts = time.split(':').map(Number)
 
     if (parts.length > 3) {
@@ -345,7 +333,7 @@ export class Time {
     timestamp += minutes * MINUTES_MS
     timestamp += seconds * SECONDS_MS
 
-    this.#time = this.normalize(timestamp)
+    return timestamp
   }
 
   #calc(): TimeCache {
