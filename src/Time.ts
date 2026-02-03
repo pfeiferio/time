@@ -46,6 +46,7 @@ interface FormatTokens {
   s: string
   ss: string
   f: string
+  ff: string
   fff: string
 }
 
@@ -54,6 +55,7 @@ interface TimeJSON {
   minutes: number
   seconds: number
   milliseconds: number
+  time: number
   mode: TimeMode
 }
 
@@ -139,15 +141,15 @@ export class Time {
   }
 
   toFullHours(): number {
-    return Math.floor(this.#time / HOURS_MS)
+    return Math.trunc(this.#time / HOURS_MS)
   }
 
   toFullMinutes(): number {
-    return Math.floor(this.#time / MINUTES_MS)
+    return Math.trunc(this.#time / MINUTES_MS)
   }
 
   toFullSeconds(): number {
-    return Math.floor(this.#time / SECONDS_MS)
+    return Math.trunc(this.#time / SECONDS_MS)
   }
 
   toJSON(): TimeJSON {
@@ -156,7 +158,8 @@ export class Time {
       minutes: this.minutes,
       seconds: this.seconds,
       milliseconds: this.milliseconds,
-      mode: this.#mode
+      mode: this.#mode,
+      time: this.#time
     }
   }
 
@@ -169,18 +172,36 @@ export class Time {
   }
 
   add(value: Time): Time
+  add(value: number, unit: TimeUnit): Time
   add(value: number | Time, unit?: TimeUnit): Time {
+
     if (value instanceof Time) {
       this.#modeCheck(value)
       value = value.toMilliseconds()
     }
+
     unit ??= 'milliseconds'
+
     return this.#copy({
-      time: this.#time + this.#unitToMs(value, unit),
+      time: this.#subOrAdd(this.#time, this.#unitToMs(value, unit), 1)
     })
   }
 
+  #subOrAdd(time1: number, time2: number, mode: number) {
+
+    let result: number
+
+    if (mode < 0) {
+      result = time1 - time2
+    } else {
+      result = time1 + time2
+    }
+
+    return result
+  }
+
   sub(value: Time): Time
+  sub(value: number, unit: TimeUnit): Time
   sub(value: number | Time, unit?: TimeUnit): Time {
     if (value instanceof Time) {
       this.#modeCheck(value)
@@ -188,7 +209,7 @@ export class Time {
     }
     unit ??= 'milliseconds'
     return this.#copy({
-      time: this.#time - this.#unitToMs(value, unit),
+      time: this.#subOrAdd(this.#time, this.#unitToMs(value, unit), -1)
     })
   }
 
@@ -200,34 +221,39 @@ export class Time {
 
   diff(time: TimeInput, unit: TimeUnit = 'milliseconds'): number {
     const other = this.#normalizeTimeInput(time)
-    const diffMs = this.#time - other.toMilliseconds()
     this.#modeCheck(other)
+    const diffMs = this.#time - other.toMilliseconds()
 
     return this.#msToUnit(diffMs, unit)
   }
 
   isBefore(time: TimeInput): boolean {
     const other = this.#normalizeTimeInput(time)
+    this.#modeCheck(other)
     return this.#time < other.toMilliseconds()
   }
 
   isSameOrBefore(time: TimeInput): boolean {
     const other = this.#normalizeTimeInput(time)
+    this.#modeCheck(other)
     return this.#time <= other.toMilliseconds()
   }
 
   isAfter(time: TimeInput): boolean {
     const other = this.#normalizeTimeInput(time)
+    this.#modeCheck(other)
     return this.#time > other.toMilliseconds()
   }
 
   isSameOrAfter(time: TimeInput): boolean {
     const other = this.#normalizeTimeInput(time)
+    this.#modeCheck(other)
     return this.#time >= other.toMilliseconds()
   }
 
   isSame(time: TimeInput): boolean {
     const other = this.#normalizeTimeInput(time)
+    this.#modeCheck(other)
     return this.#time === other.toMilliseconds()
   }
 
@@ -246,12 +272,20 @@ export class Time {
 
   normalize(ms: number): number {
     if (this.#mode === 'clock') {
-      return ((ms % DAYS_MS) + DAYS_MS) % DAYS_MS
+      ms = ms % DAYS_MS
+      if (ms < 0) {
+        ms = DAYS_MS + ms
+      }
+      return ms
+//      return ((ms % DAYS_MS) + DAYS_MS) % DAYS_MS
     }
     return ms
   }
 
   isMidnight(): boolean {
+    if (this.isDuration) {
+      throw new Error('Method "isMidnight" is not applicable to durations. Use "isClock" mode or check total milliseconds.');
+    }
     return this.#time % DAYS_MS === 0
   }
 
@@ -265,11 +299,13 @@ export class Time {
       mm: m.toString().padStart(2, '0'),
       s: s.toString(),
       ss: s.toString().padStart(2, '0'),
-      f: f.toString(),
-      fff: f.toString().padStart(3, '0')
+      f: Math.trunc(f / 100).toString().substring(0, 1),
+      ff: Math.trunc(f / 10).toString().padStart(2, '0').substring(0, 2),
+      fff: f.toString().padStart(3, '0').substring(0, 3)
     }
 
-    return formatString.replace(/HH|H|mm|m|ss|s|fff|f/g, (match) => {
+    const sign = this.isDuration && this.#time < 0 ? '-' : ''
+    return sign + formatString.replace(/HH|H|mm|m|ss|s|fff|ff|f/g, (match) => {
       return tokens[match as FormatToken] ?? match
     })
   }
@@ -303,8 +339,23 @@ export class Time {
     return time
   }
 
+  get isDuration() {
+    return this.#mode === 'duration'
+  }
+
+  get isClock() {
+    return this.#mode === 'clock'
+  }
+
   #parseTimeString(time: string): number {
-    const parts = time.split(':').map(Number)
+    const isNegative = time.startsWith('-')
+
+    if (isNegative && this.isClock) {
+      throw new RangeError(`Invalid time: "${time}". Clock time cannot be negative. Use mode: "duration" for negative time intervals.`);
+    }
+
+    if (isNegative) time = time.substring(1)
+    const parts = time.replace(',', '.').split(':').map(Number)
 
     if (parts.length > 3) {
       throw new Error('Invalid time format: too many parts')
@@ -316,7 +367,11 @@ export class Time {
       throw new RangeError('Invalid time format: non-numeric values')
     }
 
-    if (hours < 0 || hours > 23) {
+    if (hours < 0) {
+      throw new RangeError(`Invalid hours: ${hours}. Parser error`)
+    }
+
+    if (this.isClock && hours > 23) {
       throw new RangeError(`Invalid hours: ${hours}. Must be between 0 and 23`)
     }
 
@@ -333,6 +388,10 @@ export class Time {
     timestamp += minutes * MINUTES_MS
     timestamp += seconds * SECONDS_MS
 
+    if (isNegative) {
+      timestamp *= -1
+    }
+
     return timestamp
   }
 
@@ -342,19 +401,31 @@ export class Time {
     }
 
     let tmp = this.#time
-    tmp -= Math.floor(tmp / DAYS_MS) * DAYS_MS
 
-    this.#cache.h = Math.floor(tmp / HOURS_MS)
-    tmp -= this.#cache.h * HOURS_MS
+    if (this.isClock) {
+      tmp -= Math.floor(tmp / DAYS_MS) * DAYS_MS
+    }
 
-    this.#cache.m = Math.floor(tmp / MINUTES_MS)
+    const hours = tmp / HOURS_MS
+
+    const hoursForCalculation = Math.trunc(hours)
+    this.#cache.h = hoursForCalculation
+
+    tmp -= hoursForCalculation * HOURS_MS
+
+    if (tmp < 0) tmp *= -1
+
+    this.#cache.m = Math.trunc(tmp / MINUTES_MS)
     tmp -= this.#cache.m * MINUTES_MS
 
-    this.#cache.s = Math.floor(tmp / SECONDS_MS)
+    this.#cache.s = Math.trunc(tmp / SECONDS_MS)
     tmp -= this.#cache.s * SECONDS_MS
 
     this.#cache.f = tmp
     this.#cache.t = this.#time
+
+    if (this.#cache.h < 0) this.#cache.h *= -1
+    if (this.#cache.h === 0) this.#cache.h = 0
 
     return this.#cache
   }

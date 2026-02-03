@@ -39,7 +39,7 @@ npm install @pfeiferio/time
 ### Clock Time
 
 ```ts
-import { Time } from '@pfeiferio/time'
+import {Time} from '@pfeiferio/time'
 
 const t = new Time('13:45:30')
 
@@ -55,10 +55,21 @@ t.toString()   // "13:45:30"
 ### Duration
 
 ```ts
-const d = new Time(90_000, { mode: 'duration' })
+const d = new Time(90_000, {mode: 'duration'})
 
 d.toSeconds()  // 90
 d.toMinutes()  // 1.5
+```
+
+Durations can be **negative** and are represented as signed milliseconds:
+
+```ts
+const d = new Time(-1100, {mode: 'duration'})
+
+d.toMilliseconds() // -1100
+d.seconds          // 1
+d.milliseconds     // 100
+d.format()         // "-00:00:01"
 ```
 
 ---
@@ -68,13 +79,13 @@ d.toMinutes()  // 1.5
 Each `Time` instance operates in **exactly one mode**:
 
 | Mode       | Meaning                          |
-| ---------- | -------------------------------- |
+|------------|----------------------------------|
 | `clock`    | Wall-clock time within a 24h day |
 | `duration` | Time span without normalization  |
 
 ```ts
 const clock = new Time('23:30')
-const duration = new Time(3600000, { mode: 'duration' })
+const duration = new Time(3600000, {mode: 'duration'})
 ```
 
 Clock times are normalized to a 24h range:
@@ -119,7 +130,7 @@ You can also add or subtract another `Time`:
 
 ```ts
 const a = new Time('12:00')
-const b = new Time('01:30', { mode: 'duration' })
+const b = new Time('01:30', {mode: 'duration'})
 
 a.add(b) // ❌ throws (mode mismatch)
 ```
@@ -166,16 +177,22 @@ time.format('HH:mm:ss.fff')
 
 ### Format Tokens
 
-| Token | Meaning                  |
-| ----- | ------------------------ |
-| `H`   | Hours                    |
-| `HH`  | Zero-padded hours        |
-| `m`   | Minutes                  |
-| `mm`  | Zero-padded minutes      |
-| `s`   | Seconds                  |
-| `ss`  | Zero-padded seconds      |
-| `f`   | Milliseconds             |
-| `fff` | Zero-padded milliseconds |
+| Token | Meaning                        |
+|-------|--------------------------------|
+| `H`   | Hours                          |
+| `HH`  | Zero-padded hours              |
+| `m`   | Minutes                        |
+| `mm`  | Zero-padded minutes            |
+| `s`   | Seconds                        |
+| `ss`  | Zero-padded seconds            |
+| `f`   | Tenths of a second (0–9)       |
+| `ff`  | Hundredths of a second (00–99) |
+| `fff` | Milliseconds (000–999)         |
+
+Fractional tokens are truncated, not rounded.
+
+For durations, the sign is applied once to the formatted output.
+Individual time units are always absolute values.
 
 ---
 
@@ -196,10 +213,10 @@ Creates a **new instance** with the same value but a different mode.
 JSON.stringify(new Time('10:30'))
 // {"hours":10,"minutes":30,"seconds":0,"milliseconds":0,"mode":"clock"}
 
-Number(new Time(5000, { mode: 'duration' }))
+Number(new Time(5000, {mode: 'duration'}))
 // 5000
 
-`${new Time('08:00')}`
+  `${new Time('08:00')}`
 // "08:00:00"
 ```
 

@@ -40,7 +40,8 @@ test('check getters', () => {
     milliseconds: 500,
     minutes: 20,
     mode: 'clock',
-    seconds: 30
+    seconds: 30,
+    time: 37230500
   })
 
   assert.equal(new Time('10:00:10').sub(10, 'hours').toMilliseconds(), 10000)

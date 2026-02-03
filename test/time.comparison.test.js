@@ -148,11 +148,3 @@ test('toFullSeconds floors seconds', () => {
   const t = new Time('00:00:01.999')
   assert.equal(t.toFullSeconds(), 1)
 })
-
-test('comparison between clock and duration ', () => {
-  const clock = new Time('10:00')
-  const duration = new Time('10:00').asDuration()
-
-  assert.equal(clock.isBefore(duration), false)
-  assert.equal(duration.isBefore(clock), false)
-})
