@@ -1,6 +1,6 @@
 {
   "name": "@pfeiferio/time",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Strict and predictable time utility for clock times and durations",
   "license": "MIT",
   "author": "Pascal Pfeifer <pascal@pfeifer.zone>",

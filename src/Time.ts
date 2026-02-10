@@ -50,7 +50,7 @@ interface FormatTokens {
   fff: string
 }
 
-interface TimeJSON {
+export interface TimeJSON {
   hours: number
   minutes: number
   seconds: number
