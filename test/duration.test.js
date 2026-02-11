@@ -104,4 +104,8 @@ describe('Time - constructor duration', () => {
     assert.equal(dur.toMilliseconds(), (29 * 60 + 44) * -1000)
     assert.equal(dur.format(), "-00:29:44")
   })
+
+  it('catch', ()=>{
+    assert.throws(() => new Time('-10:00:00', {mode: 'duration'}).isMidnight(), /not applicable to durations/)
+  })
 })

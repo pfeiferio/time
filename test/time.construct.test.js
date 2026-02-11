@@ -14,6 +14,7 @@ test('create with string', () => {
 })
 
 test('create with invalid parameter', () => {
+
   assert.throws(() => new Time([]))
   assert.throws(() => new Time('1:1:1:1'))
   assert.throws(() => new Time('a:1:1'))
@@ -21,5 +22,6 @@ test('create with invalid parameter', () => {
   assert.throws(() => new Time('1:1:a'))
   assert.throws(() => new Time('60:1:1'))
   assert.throws(() => new Time('1:60:1'))
+  assert.throws(() => new Time('--10:00:00', {mode: "duration"}), /Invalid hours/)
   assert.throws(() => new Time('1:1:60'))
 })

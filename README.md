@@ -6,6 +6,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](https://nodejs.org/)
+[![codecov](https://codecov.io/gh/pfeiferio/time/branch/main/graph/badge.svg)](https://codecov.io/gh/pfeiferio/time)
 
 This package provides a single `Time` class with a clear separation between
 **wall-clock time** (`HH:mm:ss`) and **durations** (`milliseconds`, `seconds`, etc.).

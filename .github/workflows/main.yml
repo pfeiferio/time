@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [18, 20, 22]
+        node-version: [ 18, 22 ]
 
     steps:
       - name: Checkout
@@ -40,8 +40,13 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Run coverage
+        if: matrix.node-version == 22
+        run: npm run test:coverage:lcov
+
       - name: Run tests
-        run: node --test ${{ matrix.node-version == 22 && '--experimental-test-coverage --test-reporter=lcov --test-reporter-destination=lcov.info' || '' }}
+        if: matrix.node-version == 18
+        run: npm run test
 
       - name: Upload coverage to Codecov
         if: matrix.node-version == 22
