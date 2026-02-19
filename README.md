@@ -24,6 +24,7 @@ not as a date-time replacement.
 - ✅ Numeric, string, and `Time` inputs
 - ✅ JSON & primitive coercion support
 - ✅ No dependencies
+- ✅ Factory methods (`now`, `fromDate`, `fromJSON`, `midnight`, `noon`)
 
 ---
 
@@ -205,6 +206,36 @@ time.asDuration()
 ```
 
 Creates a **new instance** with the same value but a different mode.
+
+---
+
+## Factory Methods
+```ts
+Time.now()                    // current local time as clock
+Time.fromDate(new Date())     // extract time component from a Date
+Time.fromJSON(json)           // restore from toJSON() output
+Time.midnight()               // 00:00:00
+Time.noon()                   // 12:00:00
+```
+
+### fromDate
+```ts
+const date = new Date(2024, 0, 1, 12, 30, 45, 123)
+const time = Time.fromDate(date)
+
+time.hours        // 12
+time.minutes      // 30
+time.seconds      // 45
+time.milliseconds // 123
+```
+
+### fromJSON
+```ts
+const original = new Time('12:30:45.123')
+const restored = Time.fromJSON(original.toJSON())
+
+restored.hours // 12
+```
 
 ---
 
