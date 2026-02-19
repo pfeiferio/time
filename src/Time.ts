@@ -306,7 +306,7 @@ export class Time {
 
     const sign = this.isDuration && this.#time < 0 ? '-' : ''
     return sign + formatString.replace(/HH|H|mm|m|ss|s|fff|ff|f/g, (match) => {
-      return tokens[match as FormatToken] ?? match
+      return tokens[match as FormatToken]
     })
   }
 

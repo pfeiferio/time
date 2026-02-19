@@ -707,3 +707,25 @@ describe('Time - Comparison', () => {
     })
   })
 })
+
+describe('#normalizeTimeInput validation', () => {
+  it('should throw on null', () => {
+    const time = new Time('12:00:00')
+    assert.throws(() => time.isBefore(null), /null or undefined/)
+  })
+
+  it('should throw on undefined', () => {
+    const time = new Time('12:00:00')
+    assert.throws(() => time.isBefore(undefined), /null or undefined/)
+  })
+
+  it('should throw on invalid type', () => {
+    const time = new Time('12:00:00')
+    assert.throws(() => time.isBefore({}), /must be a string, number or Time instance/)
+  })
+
+  it('should include the actual type in the error message', () => {
+    const time = new Time('12:00:00')
+    assert.throws(() => time.isBefore([]), /\[object Array\]/)
+  })
+})

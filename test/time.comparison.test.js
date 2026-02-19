@@ -123,6 +123,7 @@ test('asClock returns new object', () => {
 
   assert.notEqual(clock, t)
   assert.equal(clock.format('HH:mm'), '22:00')
+  assert.equal(clock.format('#HH:mm#'), '#22:00#')
 })
 
 test('asClock wraps duration values', () => {
