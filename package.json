@@ -1,6 +1,6 @@
 {
   "name": "@pfeiferio/time",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "description": "Strict and predictable time utility for clock times and durations",
   "license": "MIT",
   "author": "Pascal Pfeifer <pascal@pfeifer.zone>",
@@ -40,6 +40,7 @@
     "node": ">=18.0.0"
   },
   "scripts": {
+    "prepublishOnly": "npm test",
     "build": "npm run clean && tsc",
     "clean": "rm -rf dist",
     "test": "npm run build && node --test",

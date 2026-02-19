@@ -1,9 +1,9 @@
 const branding = Symbol('Time')
 
-const DAYS_MS = 24 * 60 * 60 * 1000
-const HOURS_MS = 60 * 60 * 1000
-const MINUTES_MS = 60 * 1000
-const SECONDS_MS = 1000
+export const DAYS_MS = 24 * 60 * 60 * 1000
+export const HOURS_MS = 60 * 60 * 1000
+export const MINUTES_MS = 60 * 1000
+export const SECONDS_MS = 1000
 
 type TimeMode = 'clock' | 'duration'
 
@@ -86,7 +86,7 @@ export class Time {
 
     if (this.#isBrandedTime(time)) {
       this.#mode = time.mode
-      this.#time = this.normalize(time.time)
+      this.#time = this.#normalize(time.time)
     } else if (time instanceof Time) {
       this.#time = time.#time
       this.#mode = options.mode ?? time.#mode
@@ -100,7 +100,7 @@ export class Time {
         throw new TypeError('Time must be a string or branded Time object')
       }
 
-      this.#time = this.normalize(this.#parseTimeString(time))
+      this.#time = this.#normalize(this.#parseTimeString(time))
     }
   }
 
@@ -270,7 +270,7 @@ export class Time {
     return this.#time > startTime.#time && this.#time < endTime.#time
   }
 
-  normalize(ms: number): number {
+  #normalize(ms: number): number {
     if (this.#mode === 'clock') {
       ms = ms % DAYS_MS
       if (ms < 0) {
@@ -336,6 +336,10 @@ export class Time {
     if (typeof time === 'string' || typeof time === 'number') {
       return new Time(time, {mode: this.#mode})
     }
+
+    if (time == null) throw new TypeError('time must not be null or undefined')
+    if (!(time instanceof Time)) throw new TypeError(`"time" must be a string, number or Time instance, got ${Object.prototype.toString.call(time)}`)
+
     return time
   }
 
@@ -425,6 +429,8 @@ export class Time {
     this.#cache.t = this.#time
 
     if (this.#cache.h < 0) this.#cache.h *= -1
+
+    // Prevents -0 which would show as "-0" in console.log
     if (this.#cache.h === 0) this.#cache.h = 0
 
     return this.#cache
@@ -474,5 +480,29 @@ export class Time {
       time: options.time ?? this.#time,
       mode: options.mode ?? this.#mode,
     })
+  }
+
+  static now() {
+    return Time.fromDate(new Date())
+  }
+
+  static fromDate(date: Date): Time {
+    const ms = date.getHours() * HOURS_MS
+      + date.getMinutes() * MINUTES_MS
+      + date.getSeconds() * SECONDS_MS
+      + date.getMilliseconds()
+    return new Time(ms)
+  }
+
+  static fromJSON(json: TimeJSON): Time {
+    return new Time(json.time, {mode: json.mode})
+  }
+
+  static midnight(): Time {
+    return new Time(0)
+  }
+
+  static noon(): Time {
+    return new Time(12 * HOURS_MS)
   }
 }
